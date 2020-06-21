@@ -1,0 +1,33 @@
+name: to build
+
+on:
+    push:
+    pull_request:
+    release:
+
+jobs:
+    build-mingw:
+        runs-on: windows-latest
+        steps:
+            - shell: cmd
+              run: |
+                cd /d C:
+                mkdir MinGW
+                rem whatever
+                curl -O https://lwys-file-bucket-uax4yp6.netlify.app/mingw-17.1-nuwen-cleanup.7z
+                7z x mingw-17.1-nuwen-cleanup.7z -oC:\MinGW -y -aoa -bb3 -slt
+                del /y mingw-17.1-nuwen-cleanup.7z
+                C:\MinGW\set_distro_paths
+            - uses: actions/checkout@v2
+              with:
+                submodules: "recursive"
+            - name: make
+              shell: cmd
+              run: C:\MinGW\set_distro_paths && g++ -O3 -march=native -fomit-frame-pointer -DWIN32 aes-finder.cpp -o aes-finder -static-libstdc++ -static-libgcc
+            - name: Upload binary
+              uses: actions/upload-artifact@v2
+              with:
+                path: aes-finder.exe
+                # platfrom-name-version-builder
+                # todo: append _github_actions_hosted_runner to builder field where possible
+                name: x86_64-pc-winnt-jvav-9git-azure_vm_winnt
